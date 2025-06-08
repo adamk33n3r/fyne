@@ -37,7 +37,10 @@ func checkLocalMetadata() {
 	if data.Details.Icon != "" {
 		res, err := fyne.LoadResourceFromPath(data.Details.Icon)
 		if err == nil {
-			meta.Icon = metadata.ScaleIcon(res, 512)
+			meta.Icon = res
+			if !strings.EqualFold(filepath.Ext(data.Details.Icon), ".ico") {
+				meta.Icon = metadata.ScaleIcon(res, 512)
+			}
 		}
 	}
 
