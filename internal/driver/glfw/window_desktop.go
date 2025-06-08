@@ -8,6 +8,7 @@ import (
 	"image"
 	_ "image/png" // for the icon
 	"os"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"time"
@@ -25,6 +26,7 @@ import (
 	"fyne.io/fyne/v2/internal/svg"
 	"fyne.io/fyne/v2/storage"
 
+	"github.com/fyne-io/image/ico"
 	"github.com/go-gl/glfw/v3.3/glfw"
 )
 
@@ -207,19 +209,28 @@ func (w *window) SetIcon(icon fyne.Resource) {
 			return
 		}
 
-		var img image.Image
+		var images []image.Image
 		if svg.IsResourceSVG(w.icon) {
-			img = painter.PaintImage(&canvas.Image{Resource: w.icon}, nil, windowIconSize, windowIconSize)
+			images = []image.Image{painter.PaintImage(&canvas.Image{Resource: w.icon}, nil, windowIconSize, windowIconSize)}
 		} else {
-			pix, _, err := image.Decode(bytes.NewReader(w.icon.Content()))
-			if err != nil {
-				fyne.LogError("Failed to decode image for window icon", err)
-				return
+			if strings.EqualFold(filepath.Ext(w.icon.Name()), ".ico") {
+				imgs, err := ico.DecodeAll(bytes.NewReader(w.icon.Content()))
+				if err != nil {
+					fyne.LogError("Failed to decode images for window icon", err)
+					return
+				}
+				images = imgs
+			} else {
+				pix, _, err := image.Decode(bytes.NewReader(w.icon.Content()))
+				if err != nil {
+					fyne.LogError("Failed to decode image for window icon", err)
+					return
+				}
+				images = []image.Image{pix}
 			}
-			img = pix
 		}
 
-		w.viewport.SetIcon([]image.Image{img})
+		w.viewport.SetIcon(images)
 	})
 }
 
